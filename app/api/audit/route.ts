@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 // Simulador de análisis UX con IA (en producción usarías OpenAI GPT-4)
 export async function POST(request: Request) {
@@ -79,8 +80,25 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    // En producción, aquí guardarías en Supabase:
-    // const { data, error } = await supabase.from('audits').insert([result]);
+    // Guardar en Supabase
+    const { data, error } = await supabase
+      .from('audits')
+      .insert([{
+        url: result.url,
+        email: result.email,
+        score: result.score,
+        category_scores: result.categoryScores,
+        issues: result.issues,
+        projected_lift: result.projectedLift,
+        additional_revenue: result.additionalRevenue,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      // Aún así devolvemos el resultado aunque falle el guardado
+    }
 
     return NextResponse.json(result);
   } catch (error) {
